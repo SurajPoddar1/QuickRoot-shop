@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- =====================================================
+       BASIC PAGE SETUP
+       ===================================================== -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickRoot | Product Details</title>
+
+  <!-- =====================================================
+       TAILWIND CSS
+       ===================================================== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- =====================================================
+       GOOGLE FONT
+       ===================================================== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- =====================================================
+       FONT AWESOME ICONS
+       ===================================================== -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #f8fafc;
+    }
+
+    .product-main-img {
+      width: 100%;
+      height: 460px;
+      object-fit: cover;
+      border-radius: 28px;
+      background: #f1f5f9;
+    }
+
+    .related-card {
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      transition: 0.25s ease;
+    }
+
+    .related-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    }
+
+    .related-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 18px;
+      background: #f8fafc;
+    }
+
+
+    @media (max-width: 768px) {
+      .product-main-img {
+        height: 300px;
+        border-radius: 20px;
+      }
+
+      .related-img {
+        height: 150px;
+        border-radius: 14px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .product-main-img {
+        height: 220px;
+        border-radius: 16px;
+      }
+
+      .related-img {
+        height: 130px;
+      }
+    }
+
+  </style>
+</head>
+
+<body class="text-slate-900">
+  <!-- =====================================================
+       NAVBAR
+       ===================================================== -->
+  <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+      <a href="index.html" class="text-3xl font-black text-green-600 tracking-tight">
+        Quick<span class="text-orange-500">Root</span>
+      </a>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <button onclick="goBack()" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-2xl font-bold transition">
+          ← Back
+        </button>
+
+        <a href="wishlist.html" class="relative">
+          <div class="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-xl hover:bg-slate-200 transition">
+            ❤️
+          </div>
+        </a>
+
+        <a href="cart.html" class="relative">
+          <div class="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-xl hover:bg-slate-200 transition">
+            🛒
+          </div>
+          <span
+            id="cart-count"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center font-bold"
+          >
+            0
+          </span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- =====================================================
+       PRODUCT SECTION
+       ===================================================== -->
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-8">
+    <section class="grid lg:grid-cols-[1fr_1fr] gap-8 items-start">
+      <!-- LEFT IMAGE -->
+      <div class="bg-white rounded-[32px] border border-slate-200 shadow-sm p-4 md:p-5">
+        <img id="product-image" src="" alt="Product" class="product-main-img">
+      </div>
+
+      <!-- RIGHT DETAILS -->
+      <div class="bg-white rounded-[32px] border border-slate-200 shadow-sm p-6 md:p-8">
+        <div id="product-badges" class="flex gap-2 flex-wrap mb-4"></div>
+
+        <p id="product-category" class="text-sm font-bold text-green-600 mb-2">Category</p>
+        <h1 id="product-name" class="text-4xl md:text-5xl font-black leading-tight mb-4">Product Name</h1>
+
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <span id="old-price" class="line-through text-slate-400 text-xl">₹0</span>
+          <span id="new-price" class="text-green-600 font-black text-4xl">₹0</span>
+          <span id="discount" class="bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-black">₹0 OFF</span>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 mb-6">
+          <div class="bg-slate-50 rounded-2xl p-4">
+            <p class="text-sm text-slate-500 mb-1">Unit</p>
+            <p id="product-unit" class="font-black text-lg">1 unit</p>
+          </div>
+
+          <div class="bg-slate-50 rounded-2xl p-4">
+            <p class="text-sm text-slate-500 mb-1">Stock</p>
+            <p id="product-stock" class="font-black text-lg">In Stock</p>
+          </div>
+        </div>
+
+        <p id="product-desc" class="text-slate-500 leading-8 mb-8">
+          Fresh and premium quality fruit delivered at your doorstep.
+        </p>
+
+        <div id="cart-box" class="mb-6"></div>
+
+        <div class="grid sm:grid-cols-3 gap-4">
+          <div class="bg-green-50 rounded-2xl p-4">
+            <p class="font-black mb-1">Fresh Quality</p>
+            <p class="text-sm text-slate-500">Hand-picked premium fruits</p>
+          </div>
+
+          <div class="bg-yellow-50 rounded-2xl p-4">
+            <p class="font-black mb-1">Fast Delivery</p>
+            <p class="text-sm text-slate-500">Quick doorstep service</p>
+          </div>
+
+          <div class="bg-blue-50 rounded-2xl p-4">
+            <p class="font-black mb-1">Easy Shopping</p>
+            <p class="text-sm text-slate-500">Simple add to cart flow</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         RELATED PRODUCTS
+         ===================================================== -->
+    <section class="mt-12">
+      <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
+        <div>
+          <p class="text-sm font-bold text-green-600 mb-2">MORE LIKE THIS</p>
+          <h2 class="text-3xl md:text-4xl font-black">Related Fruits</h2>
+        </div>
+      </div>
+
+      <div id="related-products" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6"></div>
+    </section>
+  </main>
+
+  <script>
+    /* =====================================================
+       STATE
+       ===================================================== */
+    let fruitData = JSON.parse(localStorage.getItem("fruitData")) || [];
+    let selectedProduct = JSON.parse(localStorage.getItem("selectedProduct")) || null;
+    let cart = JSON.parse(localStorage.getItem("cart")) || {};
+    let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+
+    /* =====================================================
+       HELPERS
+       ===================================================== */
+    function formatPrice(value) {
+      return `₹${Number(value) || 0}`;
+    }
+
+    function updateCartCount() {
+      const count = Object.values(cart).reduce((a, b) => a + b, 0);
+      const box = document.getElementById("cart-count");
+      if (box) {
+        box.innerText = count;
+      }
+    }
+
+    function getStockText(stock) {
+      if (stock <= 0) return "Out of Stock";
+      if (stock <= 2) return `Only ${stock} left`;
+      return "In Stock";
+    }
+
+    function getStockColor(stock) {
+      if (stock <= 0) return "text-red-600";
+      if (stock <= 2) return "text-orange-600";
+      return "text-green-600";
+    }
+
+    function saveCart() {
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount();
+    }
+
+    function isInWishlist(id) {
+      return wishlist.some(item => Number(item.id) === Number(id));
+    }
+
+    /* =====================================================
+       BACK BUTTON
+       NOTE:
+       - Product kis page se aaya hai us hisaab se back karega
+       ===================================================== */
+    function goBack() {
+      const source = localStorage.getItem("productSource");
+
+      if (source === "shop") {
+        window.location.href = "shop.html";
+      } else if (source === "wishlist") {
+        window.location.href = "wishlist.html";
+      } else {
+        window.location.href = "index.html";
+      }
+    }
+
+    /* =====================================================
+       SHOW PRODUCT
+       NOTE:
+       - selectedProduct localStorage se aayega
+       ===================================================== */
+    function showProduct() {
+      if (!selectedProduct) {
+        document.body.innerHTML = `
+          <div style="text-align:center;padding:80px 20px;">
+            <h2 style="font-size:32px;font-weight:800;margin-bottom:12px;">No product selected</h2>
+            <p style="color:gray;margin-bottom:20px;">Please go back and choose a fruit.</p>
+            <a href="index.html" style="background:#16a34a;color:white;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:bold;">
+              Go Home
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      const finalPrice = selectedProduct.price - selectedProduct.discount;
+      const stock = Number(selectedProduct.stock || 0);
+
+      document.getElementById("product-image").src = selectedProduct.img;
+      document.getElementById("product-name").innerText = selectedProduct.name;
+      document.getElementById("product-category").innerText = selectedProduct.cat || "Fresh Fruit";
+      document.getElementById("old-price").innerText = formatPrice(selectedProduct.price);
+      document.getElementById("new-price").innerText = formatPrice(finalPrice);
+      document.getElementById("discount").innerText = `${formatPrice(selectedProduct.discount)} OFF`;
+      document.getElementById("product-unit").innerText = selectedProduct.unit || "1 unit";
+
+      const stockBox = document.getElementById("product-stock");
+      stockBox.innerText = getStockText(stock);
+      stockBox.className = `font-black text-lg ${getStockColor(stock)}`;
+
+      document.getElementById("product-desc").innerText =
+        `${selectedProduct.name} ek fresh, premium aur carefully selected fruit hai. Daily health, juice, fruit bowl aur fresh eating ke liye perfect choice hai. Is product me quality aur freshness dono maintained hai.`;
+
+      renderBadges();
+      renderCartBox(selectedProduct.id);
+      showRelatedProducts(selectedProduct.cat);
+    }
+
+    /* =====================================================
+       BADGES
+       ===================================================== */
+    function renderBadges() {
+      const badges = [];
+
+      if (selectedProduct.discount > 0) {
+        badges.push(`<span class="bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-black">${formatPrice(selectedProduct.discount)} OFF</span>`);
+      }
+
+      if (selectedProduct.organic) {
+        badges.push(`<span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-black">Organic</span>`);
+      }
+
+      if (selectedProduct.featured) {
+        badges.push(`<span class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm font-black">Featured</span>`);
+      }
+
+      if (isInWishlist(selectedProduct.id)) {
+        badges.push(`<span class="bg-pink-100 text-pink-600 px-4 py-2 rounded-full text-sm font-black">In Wishlist</span>`);
+      }
+
+      document.getElementById("product-badges").innerHTML = badges.join("");
+    }
+
+    /* =====================================================
+       CART BOX
+       NOTE:
+       - Add to cart / plus minus yahin show hoga
+       ===================================================== */
+    function renderCartBox(id) {
+      const box = document.getElementById("cart-box");
+      const qty = cart[id] || 0;
+      const stock = Number(selectedProduct.stock || 0);
+
+      if (stock <= 0) {
+        box.innerHTML = `
+          <div class="grid sm:grid-cols-2 gap-3">
+            <button disabled class="bg-slate-300 text-slate-600 px-6 py-4 rounded-2xl font-black cursor-not-allowed">
+              Out of Stock
+            </button>
+
+            <button onclick="toggleWishlist(${id})" class="bg-red-500 hover:bg-red-600 text-white px-6 py-4 rounded-2xl font-black transition">
+              ${isInWishlist(id) ? "Remove Wishlist" : "Add to Wishlist"}
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      if (qty > 0) {
+        box.innerHTML = `
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div class="flex items-center justify-center gap-3 bg-green-600 text-white rounded-2xl px-4 py-4">
+              <button onclick="minusItem(${id})" class="bg-white text-green-600 px-3 py-1 rounded-xl font-black">-</button>
+              <span class="font-black text-lg min-w-[24px] text-center">${qty}</span>
+              <button onclick="plusItem(${id})" class="bg-white text-green-600 px-3 py-1 rounded-xl font-black">+</button>
+            </div>
+
+            <button onclick="toggleWishlist(${id})" class="bg-red-500 hover:bg-red-600 text-white px-6 py-4 rounded-2xl font-black transition">
+              ${isInWishlist(id) ? "Remove Wishlist" : "Add to Wishlist"}
+            </button>
+          </div>
+        `;
+      } else {
+        box.innerHTML = `
+          <div class="grid sm:grid-cols-2 gap-3">
+            <button onclick="addToCart(${id})" class="bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-2xl font-black transition">
+              Add to Cart
+            </button>
+
+            <button onclick="toggleWishlist(${id})" class="bg-red-500 hover:bg-red-600 text-white px-6 py-4 rounded-2xl font-black transition">
+              ${isInWishlist(id) ? "Remove Wishlist" : "Add to Wishlist"}
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    /* =====================================================
+       CART ACTIONS
+       ===================================================== */
+    function addToCart(id) {
+      const stock = Number(selectedProduct.stock || 0);
+      if (stock <= 0) return;
+
+      if (cart[id]) {
+        if (cart[id] >= stock) {
+          alert(`Only ${stock} items available`);
+          return;
+        }
+        cart[id]++;
+      } else {
+        cart[id] = 1;
+      }
+
+      saveCart();
+      renderCartBox(id);
+    }
+
+    function plusItem(id) {
+      const stock = Number(selectedProduct.stock || 0);
+      if ((cart[id] || 0) >= stock) {
+        alert(`Only ${stock} items available`);
+        return;
+      }
+
+      cart[id]++;
+      saveCart();
+      renderCartBox(id);
+    }
+
+    function minusItem(id) {
+      if (cart[id] > 1) {
+        cart[id]--;
+      } else {
+        delete cart[id];
+      }
+
+      saveCart();
+      renderCartBox(id);
+    }
+
+    /* =====================================================
+       WISHLIST ACTION
+       ===================================================== */
+    function toggleWishlist(id) {
+      const exists = wishlist.find(item => Number(item.id) === Number(id));
+
+      if (exists) {
+        wishlist = wishlist.filter(item => Number(item.id) !== Number(id));
+      } else {
+        wishlist.push(selectedProduct);
+      }
+
+      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      renderBadges();
+      renderCartBox(id);
+    }
+
+    /* =====================================================
+       RELATED PRODUCTS
+       NOTE:
+       - Same category ke products dikhayega
+       ===================================================== */
+    function showRelatedProducts(category) {
+      const related = fruitData.filter(item => item.cat === category && item.id !== selectedProduct.id);
+      const container = document.getElementById("related-products");
+
+      if (related.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white rounded-3xl border border-slate-200 p-10 text-center text-slate-500">
+            No related fruits found
+          </div>
+        `;
+        return;
+      }
+
+      let html = "";
+
+      related.slice(0, 4).forEach((item) => {
+        const finalPrice = item.price - item.discount;
+
+        html += `
+          <div class="related-card">
+            <img src="${item.img}" alt="${item.name}" class="related-img">
+
+            <div class="flex gap-2 flex-wrap mt-4 mb-3">
+              ${item.discount > 0 ? `<span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-black">${formatPrice(item.discount)} OFF</span>` : ""}
+              ${item.organic ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black">Organic</span>` : ""}
+            </div>
+
+            <h3 class="text-xl font-black mb-2">${item.name}</h3>
+            <p class="text-sm text-slate-500 mb-2">${item.unit || "1 unit"}</p>
+
+            <div class="mb-4">
+              <span class="line-through text-slate-400 text-sm">${formatPrice(item.price)}</span>
+              <span class="text-green-600 font-black text-2xl ml-2">${formatPrice(finalPrice)}</span>
+            </div>
+
+            <button onclick="openProduct(${item.id})" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl font-black transition">
+              View Details
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    /* =====================================================
+       OPEN RELATED PRODUCT
+       ===================================================== */
+    function openProduct(id) {
+      const item = fruitData.find(f => Number(f.id) === Number(id));
+      if (!item) return;
+
+      localStorage.setItem("selectedProduct", JSON.stringify(item));
+      localStorage.setItem("productSource", "product");
+      window.location.href = "product.html";
+    }
+
+    /* =====================================================
+       PAGE START
+       ===================================================== */
+    updateCartCount();
+    showProduct();
+  </script>
+</body>
+</html>
