@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact | QuickRoot Fresh Fruits, Purnea</title>
+  <meta name="description" content="Contact QuickRoot (Mantu Fruits) at R. N. Sah Chowk, Purnea. Call, message on WhatsApp, or visit the shop for orders, delivery and fruit quality." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    :root{
+      --leaf-950:#0b2a19;
+      --leaf-900:#0f3d24;
+      --leaf-700:#166534;
+      --leaf-600:#16a34a;
+      --leaf-100:#dcfce7;
+      --mango:#f97316;
+      --sun:#fbbf24;
+      --paper:#f4f7f2;
+      --card:#ffffff;
+      --ink:#10201a;
+      --muted:#5a6a61;
+      --line:#d9e3da;
+      --danger:#b91c1c;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:'Outfit',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%}
+    .wrap{width:min(1160px,calc(100% - 40px));margin-inline:auto}
+    :focus-visible{outline:3px solid var(--sun);outline-offset:2px;border-radius:6px}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+    /* ---------- Header ---------- */
+    .site-header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px}
+    .brand{font-size:28px;font-weight:900;letter-spacing:-.04em;color:var(--leaf-600)}
+    .brand span{color:var(--mango)}
+    .nav-links{display:flex;gap:4px}
+    .nav-links a{padding:10px 14px;border-radius:10px;font-weight:600;color:#40524a}
+    .nav-links a:hover{background:var(--paper)}
+    .nav-links a[aria-current="page"]{background:var(--leaf-100);color:var(--leaf-700)}
+    .nav-icons{display:flex;gap:8px}
+    .icon-btn{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;display:grid;place-items:center;color:#40524a;background:#fff}
+    .icon-btn:hover{background:var(--paper)}
+
+    /* ---------- Hero ---------- */
+    .hero{background:var(--leaf-900);color:#fff;padding:72px 0 120px}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:end}
+    .status{display:inline-flex;align-items:center;gap:10px;padding:8px 16px 8px 12px;border-radius:999px;background:rgba(255,255,255,.1);font-weight:600;font-size:15px}
+    .dot{width:10px;height:10px;border-radius:50%;background:#94a3b8;flex:none}
+    .status[data-open="true"] .dot{background:#4ade80;box-shadow:0 0 0 0 rgba(74,222,128,.7);animation:pulse 2s infinite}
+    .status[data-open="false"] .dot{background:var(--sun)}
+    @keyframes pulse{70%{box-shadow:0 0 0 9px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+    .hero h1{font-size:clamp(38px,5.6vw,68px);line-height:1.04;letter-spacing:-.035em;font-weight:800;margin:22px 0 18px;max-width:14ch}
+    .hero p.lead{font-size:19px;color:#cfe5d6;max-width:46ch;margin:0}
+
+    .channels{background:#fff;color:var(--ink);border-radius:20px;padding:8px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
+    .channel{display:flex;align-items:center;gap:16px;padding:18px 18px;border-radius:14px}
+    .channel + .channel{border-top:1px solid var(--line);border-radius:0}
+    .channel:first-child{border-radius:14px 14px 0 0}
+    .channel:last-child{border-radius:0 0 14px 14px}
+    .channel:hover{background:var(--paper)}
+    .channel .ico{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex:none}
+    .ico.call{background:var(--leaf-100);color:var(--leaf-700)}
+    .ico.wa{background:#d1fae5;color:#047857}
+    .ico.visit{background:#ffedd5;color:#c2410c}
+    .channel b{display:block;font-size:18px;line-height:1.25}
+    .channel small{color:var(--muted);font-size:14px}
+    .channel .go{margin-left:auto;color:#94a3b8}
+
+    /* ---------- Main ---------- */
+    .main{margin-top:-64px;padding-bottom:72px}
+    .layout{display:grid;grid-template-columns:1.45fr 1fr;gap:28px;align-items:start}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:36px}
+    .panel h2{margin:0 0 6px;font-size:28px;letter-spacing:-.02em;line-height:1.2}
+    .panel .sub{margin:0 0 28px;color:var(--muted)}
+
+    fieldset{border:0;margin:0 0 22px;padding:0}
+    legend,.label{display:block;font-weight:600;font-size:15px;margin-bottom:8px;padding:0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip input{position:absolute;opacity:0;pointer-events:none}
+    .chip span{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px solid var(--line);border-radius:999px;font-weight:500;cursor:pointer;background:#fff;transition:background .15s,border-color .15s}
+    .chip span:hover{border-color:var(--leaf-600)}
+    .chip input:checked + span{background:var(--leaf-900);border-color:var(--leaf-900);color:#fff}
+    .chip input:focus-visible + span{outline:3px solid var(--sun);outline-offset:2px}
+
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .field{margin-bottom:22px}
+    .field input,.field textarea{width:100%;font:inherit;color:inherit;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--radius);background:#fff;transition:border-color .15s,box-shadow .15s}
+    .field textarea{min-height:140px;resize:vertical}
+    .field input:hover,.field textarea:hover{border-color:#b8c9bc}
+    .field input:focus,.field textarea:focus{outline:none;border-color:var(--leaf-600);box-shadow:0 0 0 4px rgba(22,163,74,.15)}
+    .field[data-invalid="true"] input,.field[data-invalid="true"] textarea{border-color:var(--danger)}
+    .err{display:none;color:var(--danger);font-size:14px;margin-top:6px}
+    .field[data-invalid="true"] .err{display:block}
+    .hint{color:var(--muted);font-weight:400}
+    .phone-wrap{display:flex}
+    .phone-wrap .prefix{display:grid;place-items:center;padding:0 14px;border:1.5px solid var(--line);border-right:0;border-radius:var(--radius) 0 0 var(--radius);background:var(--paper);color:var(--muted);font-weight:600}
+    .phone-wrap input{border-radius:0 var(--radius) var(--radius) 0}
+    #orderField[hidden]{display:none}
+
+    .actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:6px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:700;font-size:17px;padding:15px 26px;border-radius:var(--radius);border:0;cursor:pointer;transition:background .15s,transform .1s}
+    .btn:active{transform:translateY(1px)}
+    .btn-wa{background:#16a34a;color:#fff}
+    .btn-wa:hover{background:#15803d}
+    .btn-line{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+    .btn-line:hover{background:var(--paper)}
+    .note{color:var(--muted);font-size:14px;max-width:34ch;margin:0}
+
+    .sent{display:none;margin-top:22px;padding:18px 20px;border-radius:var(--radius);background:var(--leaf-100);color:#14532d}
+    .sent.show{display:block}
+    .sent b{display:block;margin-bottom:2px}
+    .sent a{font-weight:700;text-decoration:underline}
+
+    /* sidebar */
+    .side{display:grid;gap:20px}
+    .side .panel{padding:28px}
+    .side h3{margin:0 0 16px;font-size:20px;letter-spacing:-.01em}
+    dl.facts{margin:0;display:grid;gap:16px}
+    dl.facts div{display:grid;grid-template-columns:auto 1fr;gap:2px 14px}
+    dl.facts i{grid-row:span 2;color:var(--leaf-600);width:20px;text-align:center;margin-top:3px}
+    dl.facts dt{font-size:14px;color:var(--muted)}
+    dl.facts dd{margin:0;font-weight:600}
+    table.hours{width:100%;border-collapse:collapse;font-size:16px}
+    table.hours th{font-weight:500;text-align:left;padding:9px 0;color:var(--muted)}
+    table.hours td{text-align:right;padding:9px 0;font-weight:600}
+    table.hours tr + tr{border-top:1px solid var(--line)}
+    table.hours tr[aria-current="date"] th,table.hours tr[aria-current="date"] td{color:var(--leaf-700)}
+    table.hours tr[aria-current="date"] th::after{content:" (today)";font-weight:600}
+    .hours-note{font-size:13px;color:var(--muted);margin:12px 0 0}
+
+    /* ---------- Map ---------- */
+    .map-sec{padding:0 0 72px}
+    .map-box{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#e5ece6}
+    .map-box iframe{display:block;width:100%;height:440px;border:0}
+    .map-card{position:absolute;left:24px;bottom:24px;background:#fff;border-radius:16px;padding:22px 24px;max-width:340px;box-shadow:0 18px 40px -12px rgba(0,0,0,.35)}
+    .map-card h3{margin:0 0 4px;font-size:20px}
+    .map-card p{margin:0 0 14px;color:var(--muted)}
+
+    /* ---------- FAQ ---------- */
+    .faq-sec{padding:0 0 88px}
+    .faq-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:56px}
+    .faq-grid h2{font-size:34px;letter-spacing:-.025em;line-height:1.15;margin:0 0 10px}
+    .faq-grid > div > p{color:var(--muted);margin:0 0 20px;max-width:34ch}
+    details{border-bottom:1px solid var(--line)}
+    details:first-child{border-top:1px solid var(--line)}
+    summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 4px;font-weight:600;font-size:18px}
+    summary::-webkit-details-marker{display:none}
+    summary::after{content:"+";font-size:26px;font-weight:300;color:var(--leaf-600);line-height:1;transition:transform .2s}
+    details[open] summary::after{transform:rotate(45deg)}
+    details p{margin:0;padding:0 4px 22px;color:var(--muted);max-width:60ch}
+    details p a{color:var(--leaf-700);font-weight:600;text-decoration:underline}
+
+    /* ---------- Footer ---------- */
+    footer{background:var(--leaf-950);color:#b9d3c2;padding:44px 0 26px}
+    .foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:28px}
+    .foot .brand{color:#fff;display:block;margin-bottom:6px}
+    .foot p{margin:0;max-width:34ch}
+    .foot ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 24px}
+    .foot a:hover{color:#fff}
+    .copy{margin-top:30px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);font-size:14px;color:#7fa18b}
+
+    /* ---------- Responsive ---------- */
+    @media (max-width:960px){
+      .hero-grid,.layout,.faq-grid{grid-template-columns:1fr}
+      .hero{padding:48px 0 104px}
+      .hero-grid{gap:36px}
+      .faq-grid{gap:24px}
+    }
+    @media (max-width:680px){
+      .wrap{width:calc(100% - 28px)}
+      .nav{flex-wrap:wrap;padding-top:10px}
+      .nav-links{order:3;width:100%;overflow-x:auto;padding-bottom:8px}
+      .panel{padding:24px 20px}
+      .row{grid-template-columns:1fr;gap:0}
+      .actions .btn{width:100%}
+      .map-box iframe{height:320px}
+      .map-card{position:static;max-width:none;border-radius:0;box-shadow:none;border-top:1px solid var(--line)}
+    }
+    @media (prefers-reduced-motion:reduce){
+      *{animation:none!important;transition:none!important}
+      html{scroll-behavior:auto}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap nav">
+      <a class="brand" href="index.html" aria-label="QuickRoot home">Quick<span>Root</span></a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="index.html#shop-section">Shop</a>
+        <a href="tracking.html">Track order</a>
+        <a href="contact.html" aria-current="page">Contact</a>
+      </nav>
+      <div class="nav-icons">
+        <a class="icon-btn" href="wishlist.html" aria-label="Wishlist"><i class="fa-regular fa-heart"></i></a>
+        <a class="icon-btn" href="cart.html" aria-label="Cart"><i class="fa-solid fa-bag-shopping"></i></a>
+        <a class="icon-btn" href="profile.html" aria-label="Profile"><i class="fa-regular fa-user"></i></a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="status" id="status" data-open="unknown" role="status">
+            <span class="dot"></span><span id="statusText">Checking shop hours…</span>
+          </div>
+          <h1>Ask us anything about your fruit.</h1>
+          <p class="lead">Orders, delivery, freshness or a bulk gift box: reach the shop directly and get a real answer from the people who pack your order.</p>
+        </div>
+
+        <div class="channels">
+          <a class="channel" href="tel:+919122437214">
+            <span class="ico call"><i class="fa-solid fa-phone"></i></span>
+            <span><b>Call 91224 37214</b><small>Fastest for urgent order help</small></span>
+            <i class="fa-solid fa-chevron-right go" aria-hidden="true"></i>
+          </a>
+          <a class="channel" href="https://wa.me/919122437214" target="_blank" rel="noopener noreferrer">
+            <span class="ico wa"><i class="fa-brands fa-whatsapp"></i></span>
+            <span><b>Chat on WhatsApp</b><small>Send photos, order details, questions</small></span>
+            <i class="fa-solid fa-chevron-right go" aria-hidden="true"></i>
+          </a>
+          <a class="channel" href="#map">
+            <span class="ico visit"><i class="fa-solid fa-location-dot"></i></span>
+            <span><b>Visit the shop</b><small>R. N. Sah Chowk, Purnea, Bihar</small></span>
+            <i class="fa-solid fa-chevron-right go" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORM + DETAILS -->
+    <section class="main">
+      <div class="wrap layout">
+
+        <div class="panel">
+          <h2>Send us a message</h2>
+          <p class="sub">Fill this in and we'll open WhatsApp with your message ready to send. You can write in English or Hindi.</p>
+
+          <form id="contactForm" novalidate>
+            <fieldset>
+              <legend>What is this about?</legend>
+              <div class="chips" id="topics">
+                <label class="chip"><input type="radio" name="topic" value="Order" checked><span>My order</span></label>
+                <label class="chip"><input type="radio" name="topic" value="Delivery"><span>Delivery</span></label>
+                <label class="chip"><input type="radio" name="topic" value="Fruit quality"><span>Fruit quality</span></label>
+                <label class="chip"><input type="radio" name="topic" value="Bulk or gift order"><span>Bulk or gift order</span></label>
+                <label class="chip"><input type="radio" name="topic" value="Something else"><span>Something else</span></label>
+              </div>
+            </fieldset>
+
+            <div class="row">
+              <div class="field" id="nameField">
+                <label class="label" for="name">Your name</label>
+                <input id="name" name="name" type="text" autocomplete="name" placeholder="e.g. Rahul Kumar" />
+                <div class="err">Enter your name so we know who to reply to.</div>
+              </div>
+              <div class="field" id="phoneField">
+                <label class="label" for="phone">Mobile number</label>
+                <div class="phone-wrap">
+                  <span class="prefix" aria-hidden="true">+91</span>
+                  <input id="phone" name="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel-national" placeholder="10-digit number" />
+                </div>
+                <div class="err">Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9.</div>
+              </div>
+            </div>
+
+            <div class="field" id="orderField">
+              <label class="label" for="orderId">Order ID <span class="hint">(optional)</span></label>
+              <input id="orderId" name="orderId" type="text" placeholder="You'll find it on the Track order page" autocomplete="off" />
+            </div>
+
+            <div class="field" id="messageField">
+              <label class="label" for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Tell us what happened or what you need."></textarea>
+              <div class="err">Write at least a short line (5 characters or more) about what you need.</div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-wa" type="submit"><i class="fa-brands fa-whatsapp"></i> Send on WhatsApp</button>
+              <p class="note">Your message is delivered when you press Send in WhatsApp.</p>
+            </div>
+
+            <div class="sent" id="sent" role="status" aria-live="polite">
+              <b>WhatsApp should have opened with your message.</b>
+              Press Send there to deliver it. Nothing opened? <a id="sentLink" href="#" target="_blank" rel="noopener noreferrer">Open WhatsApp manually</a>.
+            </div>
+          </form>
+        </div>
+
+        <aside class="side" aria-label="Shop details">
+          <div class="panel">
+            <h3>Shop details</h3>
+            <dl class="facts">
+              <div><i class="fa-solid fa-store"></i><dt>Shop</dt><dd>Mantu Fruits (QuickRoot)</dd></div>
+              <div><i class="fa-solid fa-location-dot"></i><dt>Address</dt><dd>R. N. Sah Chowk, Purnea, Bihar</dd></div>
+              <div><i class="fa-solid fa-phone"></i><dt>Phone and WhatsApp</dt><dd><a href="tel:+919122437214">91224 37214</a></dd></div>
+              <div><i class="fa-solid fa-truck-fast"></i><dt>Delivery</dt><dd>Free on orders above ₹500</dd></div>
+            </dl>
+          </div>
+
+          <div class="panel">
+            <h3>Opening hours</h3>
+            <table class="hours" id="hoursTable"><tbody></tbody></table>
+            <p class="hours-note">Messages sent outside these hours are answered when the shop opens.</p>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="map-sec" id="map">
+      <div class="wrap">
+        <div class="map-box">
+          <iframe title="Map showing QuickRoot at R. N. Sah Chowk, Purnea" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=R.N.%20Sah%20Chowk%2C%20Purnea%2C%20Bihar&z=16&output=embed"></iframe>
+          <div class="map-card">
+            <h3>Find the shop</h3>
+            <p>R. N. Sah Chowk, Purnea, Bihar</p>
+            <a class="btn btn-wa" style="font-size:16px;padding:12px 20px" href="https://maps.app.goo.gl/gWuvvTayyCZaRLTd9?g_st=ic" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-route"></i> Get directions</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-sec">
+      <div class="wrap faq-grid">
+        <div>
+          <h2>Quick answers</h2>
+          <p>Most questions are answered below. If yours isn't, message us above.</p>
+        </div>
+        <div>
+          <details>
+            <summary>How do I check where my order is?</summary>
+            <p>Open the <a href="tracking.html">Track order</a> page and enter your order ID. If you can't find the ID, send us your name and phone number and we'll look it up.</p>
+          </details>
+          <details>
+            <summary>When is delivery free?</summary>
+            <p>Delivery is free on orders above ₹500. Below that, the delivery charge is shown in your cart before you pay.</p>
+          </details>
+          <details>
+            <summary>My fruit wasn't fresh. What should I do?</summary>
+            <p>Choose "Fruit quality" in the form above and send a clear photo on WhatsApp along with your order ID. We'll check it and get back to you.</p>
+          </details>
+          <details>
+            <summary>Can I order in bulk or for a gift?</summary>
+            <p>Yes. Choose "Bulk or gift order" and tell us what you want, how much, and the date you need it. We'll confirm availability and price.</p>
+          </details>
+          <details>
+            <summary>Can I come to the shop instead?</summary>
+            <p>Yes. We're at R. N. Sah Chowk, Purnea. Use the map above for directions, and check the opening hours before you come.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <div>
+          <a class="brand" href="index.html">QuickRoot</a>
+          <p>Fresh fruits from Mantu Fruits, Purnea, delivered to your door.</p>
+        </div>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="index.html#shop-section">Shop</a></li>
+          <li><a href="cart.html">Cart</a></li>
+          <li><a href="tracking.html">Track order</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="copy">Developed by Suraj Poddar © 2026</div>
+    </div>
+  </footer>
+
+  <script src="sheet.js"></script>
+  <script>
+    (function () {
+      /* ============ SETTINGS: edit these ============ */
+      var WHATSAPP = "919122437214";
+      var STORAGE_KEY = "quickrootContactEnquiries";
+      // Opening hours in 24h time (India time). Change to your real hours.
+      // Use null for a closed day. Order: Sunday ... Saturday
+      var HOURS = [[8, 21], [8, 21], [8, 21], [8, 21], [8, 21], [8, 21], [8, 21]];
+      /* ============================================== */
+
+      var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+      function fmt(h) {
+        var suffix = h >= 12 ? "pm" : "am";
+        var hh = h % 12 === 0 ? 12 : h % 12;
+        return hh + " " + suffix;
+      }
+
+      function indiaNow() {
+        return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      }
+
+      /* ---------- Opening hours table + live status ---------- */
+      function renderHours() {
+        var now = indiaNow();
+        var today = now.getDay();
+        var tbody = document.querySelector("#hoursTable tbody");
+        tbody.innerHTML = "";
+        // Start the list from Monday
+        [1, 2, 3, 4, 5, 6, 0].forEach(function (d) {
+          var tr = document.createElement("tr");
+          if (d === today) tr.setAttribute("aria-current", "date");
+          var slot = HOURS[d];
+          tr.innerHTML = "<th scope='row'>" + DAYS[d] + "</th><td>" +
+            (slot ? fmt(slot[0]) + " to " + fmt(slot[1]) : "Closed") + "</td>";
+          tbody.appendChild(tr);
+        });
+
+        var status = document.getElementById("status");
+        var text = document.getElementById("statusText");
+        var slotToday = HOURS[today];
+        var hourNow = now.getHours() + now.getMinutes() / 60;
+
+        if (slotToday && hourNow >= slotToday[0] && hourNow < slotToday[1]) {
+          status.dataset.open = "true";
+          text.textContent = "Open now, until " + fmt(slotToday[1]);
+        } else {
+          status.dataset.open = "false";
+          var next = null;
+          for (var i = 0; i < 7 && !next; i++) {
+            var d = (today + i) % 7;
+            var s = HOURS[d];
+            if (!s) continue;
+            if (i === 0 && hourNow >= s[0]) continue;
+            next = { day: i === 0 ? "today" : i === 1 ? "tomorrow" : DAYS[d], open: s[0] };
+          }
+          text.textContent = next ? "Closed now, opens " + next.day + " at " + fmt(next.open) : "Closed";
+        }
+      }
+      renderHours();
+      setInterval(renderHours, 60000);
+
+      /* ---------- Form ---------- */
+      var form = document.getElementById("contactForm");
+      var nameEl = document.getElementById("name");
+      var phoneEl = document.getElementById("phone");
+      var orderEl = document.getElementById("orderId");
+      var msgEl = document.getElementById("message");
+      var orderField = document.getElementById("orderField");
+      var sent = document.getElementById("sent");
+      var sentLink = document.getElementById("sentLink");
+
+      function topic() {
+        return form.querySelector("input[name='topic']:checked").value;
+      }
+
+      function toggleOrderField() {
+        var t = topic();
+        orderField.hidden = !(t === "Order" || t === "Delivery" || t === "Fruit quality");
+      }
+      form.querySelectorAll("input[name='topic']").forEach(function (r) {
+        r.addEventListener("change", toggleOrderField);
+      });
+      toggleOrderField();
+
+      // Prefill from the customer's saved details, if they have shopped before
+      try {
+        var savedName = localStorage.getItem("custName");
+        var savedPhone = (localStorage.getItem("custPhone") || "").replace(/\D/g, "").slice(-10);
+        var lastOrder = localStorage.getItem("currentOrderId");
+        if (savedName && !nameEl.value) nameEl.value = savedName;
+        if (savedPhone.length === 10 && !phoneEl.value) phoneEl.value = savedPhone;
+        if (lastOrder && !orderEl.value) orderEl.value = lastOrder;
+      } catch (e) { /* storage unavailable: ignore */ }
+
+      phoneEl.addEventListener("input", function () {
+        phoneEl.value = phoneEl.value.replace(/\D/g, "").slice(0, 10);
+      });
+
+      var rules = {
+        name: function () { return nameEl.value.trim().length >= 2; },
+        phone: function () { return /^[6-9]\d{9}$/.test(phoneEl.value.trim()); },
+        message: function () { return msgEl.value.trim().length >= 5; }
+      };
+      var fieldBox = { name: "nameField", phone: "phoneField", message: "messageField" };
+      var inputs = { name: nameEl, phone: phoneEl, message: msgEl };
+
+      function check(key) {
+        var ok = rules[key]();
+        document.getElementById(fieldBox[key]).dataset.invalid = ok ? "false" : "true";
+        inputs[key].setAttribute("aria-invalid", ok ? "false" : "true");
+        return ok;
+      }
+      Object.keys(inputs).forEach(function (k) {
+        inputs[k].addEventListener("blur", function () { check(k); });
+        inputs[k].addEventListener("input", function () {
+          if (document.getElementById(fieldBox[k]).dataset.invalid === "true") check(k);
+        });
+      });
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var results = Object.keys(rules).map(check);
+        if (results.indexOf(false) !== -1) {
+          var firstBad = Object.keys(inputs).filter(function (k) { return !rules[k](); })[0];
+          inputs[firstBad].focus();
+          return;
+        }
+
+        var data = {
+          topic: topic(),
+          name: nameEl.value.trim(),
+          phone: phoneEl.value.trim(),
+          orderId: orderField.hidden ? "" : orderEl.value.trim(),
+          message: msgEl.value.trim(),
+          createdAt: new Date().toISOString()
+        };
+
+        var lines = [
+          "Hello QuickRoot, I need help with: " + data.topic,
+          "",
+          "Name: " + data.name,
+          "Phone: " + data.phone
+        ];
+        if (data.orderId) lines.push("Order ID: " + data.orderId);
+        lines.push("", data.message);
+
+        var url = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(lines.join("\n"));
+
+        // Keep a copy on this device in case the customer wants to look back
+        try {
+          var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          saved.unshift(data);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(saved.slice(0, 50)));
+        } catch (err) { /* ignore */ }
+
+        if (window.QRSheet) QRSheet.send("enquiry", { topic: data.topic, name: data.name, phone: data.phone, orderId: data.orderId, message: data.message });
+
+        sentLink.href = url;
+        sent.classList.add("show");
+        window.open(url, "_blank", "noopener");
+        msgEl.value = "";
+      });
+    })();
+  </script>
+</body>
+</html>

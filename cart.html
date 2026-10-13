@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickRoot | Cart</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="sheet.js"></script>
+  <script src="orders.js"></script>
+
+  <style>
+    body {
+      font-family: "Outfit", sans-serif;
+      background: #f8fafc;
+    }
+
+    @keyframes popBoom {
+      0% { transform: scale(0.75); opacity: 0; }
+      60% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes confettiDrop {
+      0% { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateY(260px) rotate(360deg); opacity: 0; }
+    }
+
+    .boom-pop {
+      animation: popBoom 0.55s ease-out;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -20px;
+      width: 10px;
+      height: 18px;
+      border-radius: 999px;
+      animation: confettiDrop 2.8s linear infinite;
+    }
+  
+    /* ---------- UPI payment animation ---------- */
+    .upi-spinner{width:76px;height:76px;border-radius:50%;border:7px solid #dcfce7;border-top-color:#16a34a;animation:upiSpin .9s linear infinite}
+    @keyframes upiSpin{to{transform:rotate(360deg)}}
+    .upi-check{width:84px;height:84px;border-radius:50%;background:#16a34a;color:#fff;font-size:46px;font-weight:900;display:flex;align-items:center;justify-content:center;animation:upiPop .5s ease}
+    @keyframes upiPop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+  </style>
+</head>
+
+<body class="text-slate-900">
+  <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+      <a href="index.html" class="text-3xl font-black text-green-600 tracking-tight">
+        Quick<span class="text-orange-500">Root</span>
+      </a>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <a href="index.html" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-2xl font-bold transition">
+          Home
+        </a>
+
+        <a href="tracking.html" class="font-bold text-slate-700 hover:text-green-600 transition">
+          Track Order
+        </a>
+
+        <a href="wishlist.html" class="font-bold text-slate-700 hover:text-red-500 transition">
+          Wishlist
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="app"></div>
+
+  <script>
+    const STORAGE = {
+      CART: "cart",
+      FRUIT_DATA: "fruitData",
+      ORDERS: "orders",
+      CURRENT_ORDER_ID: "currentOrderId",
+      CURRENT_ORDER: "currentOrder",
+      TRACK_ORDER_ID: "trackOrderId",
+      CUST_NAME: "custName",
+      CUST_PHONE: "custPhone",
+      CUST_ADDRESS: "custAddress",
+      IS_LOGIN: "isLogin",
+      LOGGED_IN_USER: "loggedInUser",
+      USER: "user"
+    };
+
+    let cart = JSON.parse(localStorage.getItem(STORAGE.CART)) || {};
+    let fruitData = JSON.parse(localStorage.getItem(STORAGE.FRUIT_DATA)) || [];
+    let pendingOrder = null;
+
+    function formatPrice(value) {
+      return `₹${Number(value) || 0}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getFruitById(id) {
+      return (fruitData || []).find(item => String(item.id) === String(id));
+    }
+
+    function getCartSource() {
+      return localStorage.getItem("cartSource") || "index";
+    }
+
+    function continueShopping() {
+      const source = getCartSource();
+      window.location.href = source === "shop" ? "index.html" : "index.html";
+    }
+
+    function getLoggedInUser() {
+      const isLogin = localStorage.getItem(STORAGE.IS_LOGIN);
+      if (isLogin === "true") {
+        return localStorage.getItem(STORAGE.LOGGED_IN_USER) || localStorage.getItem(STORAGE.USER) || "Guest";
+      }
+      return "Guest";
+    }
+
+    function saveCart() {
+      localStorage.setItem(STORAGE.CART, JSON.stringify(cart));
+    }
+
+    function getDeliveryCharge(subtotal) {
+      if (subtotal <= 0) return 0;
+      if (subtotal >= 500) return 0;
+      return 40;
+    }
+
+    function getCartSummary() {
+      let subtotal = 0;
+      let totalItems = 0;
+
+      for (let id in cart) {
+        const fruit = getFruitById(id);
+        const qty = Number(cart[id]) || 0;
+        if (!fruit || qty <= 0) continue;
+
+        subtotal += ((Number(fruit.price) || 0) - (Number(fruit.discount) || 0)) * qty;
+        totalItems += qty;
+      }
+
+      const delivery = getDeliveryCharge(subtotal);
+
+      return {
+        subtotal,
+        delivery,
+        total: subtotal + delivery,
+        totalItems
+      };
+    }
+
+    function generateOrderId() {
+      const now = Date.now().toString().slice(-8);
+      const random = Math.floor(1000 + Math.random() * 9000);
+      return `MF${now}${random}`;
+    }
+
+    function getCurrentOrder() {
+      const currentOrderId = localStorage.getItem(STORAGE.CURRENT_ORDER_ID);
+      const orders = JSON.parse(localStorage.getItem(STORAGE.ORDERS)) || [];
+      return orders.find(order => String(order.id) === String(currentOrderId)) || null;
+    }
+
+    function getCheckoutItemsHtml() {
+      let html = "";
+
+      for (let id in cart) {
+        const fruit = getFruitById(id);
+        const qty = Number(cart[id]) || 0;
+        if (!fruit || qty <= 0) continue;
+
+        const finalPrice = (Number(fruit.price) || 0) - (Number(fruit.discount) || 0);
+        const lineTotal = finalPrice * qty;
+
+        html += `
+          <div class="flex items-center justify-between gap-3 py-3 border-b border-slate-100 last:border-b-0">
+            <div class="flex items-center gap-3 min-w-0">
+              <img src="${escapeHtml(fruit.img)}" alt="${escapeHtml(fruit.name)}" class="w-14 h-14 rounded-2xl object-cover bg-slate-100">
+              <div class="min-w-0">
+                <p class="font-black truncate">${escapeHtml(fruit.name)}</p>
+                <p class="text-sm text-slate-500">${formatPrice(finalPrice)} × ${qty}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-black text-green-600">${formatPrice(lineTotal)}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      if (!html) {
+        html = `
+          <div class="bg-slate-50 rounded-2xl p-4 text-sm text-slate-500 text-center">
+            No items found in cart
+          </div>
+        `;
+      }
+
+      return html;
+    }
+
+    function clearCheckoutForm() {
+      const ids = [
+        "custName",
+        "custPhone",
+        "custAddressLine",
+        "custLandmark",
+        "custCity",
+        "custPincode"
+      ];
+
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+
+      pendingOrder = null;
+    }
+
+    function renderCartPage() {
+      const app = document.getElementById("app");
+      const summary = getCartSummary();
+
+      let itemsHtml = "";
+      let hasItems = false;
+
+      for (let id in cart) {
+        const fruit = getFruitById(id);
+        const qty = Number(cart[id]) || 0;
+        if (!fruit || qty <= 0) continue;
+
+        hasItems = true;
+        const finalPrice = (Number(fruit.price) || 0) - (Number(fruit.discount) || 0);
+        const lineTotal = finalPrice * qty;
+
+        itemsHtml += `
+          <div class="bg-white rounded-3xl p-4 md:p-5 border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <div class="flex items-center gap-4">
+              <img src="${escapeHtml(fruit.img)}" alt="${escapeHtml(fruit.name)}" class="w-24 h-24 rounded-2xl object-cover bg-slate-100">
+              <div>
+                <h3 class="text-xl font-black">${escapeHtml(fruit.name)}</h3>
+                <p class="text-sm text-slate-500 mt-1">${escapeHtml(fruit.unit || "1 unit")}</p>
+                <p class="text-sm text-slate-500 mt-1">${formatPrice(finalPrice)} × ${qty}</p>
+                <p class="text-green-600 font-bold mt-2">Subtotal ${formatPrice(lineTotal)}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center gap-3 bg-green-600 text-white px-3 py-2 rounded-2xl">
+                <button onclick="minusItem('${String(id)}')" class="bg-white text-green-600 px-3 py-1 rounded-xl font-bold">-</button>
+                <span class="font-bold min-w-[24px] text-center">${qty}</span>
+                <button onclick="plusItem('${String(id)}')" class="bg-white text-green-600 px-3 py-1 rounded-xl font-bold">+</button>
+              </div>
+
+              <button onclick="removeItem('${String(id)}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-2xl font-bold transition">
+                Remove
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (!hasItems) {
+        itemsHtml = `
+          <div class="bg-white rounded-3xl p-10 border border-slate-200 text-center shadow-sm">
+            <h2 class="text-3xl font-black mb-3">Your cart is empty</h2>
+            <p class="text-slate-500 mb-6">Fresh fruits add karo aur shopping continue karo.</p>
+            <button onclick="continueShopping()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-bold transition">
+              Shop Now
+            </button>
+          </div>
+        `;
+      }
+
+      app.innerHTML = `
+        <section class="max-w-7xl mx-auto px-4 md:px-6 py-8">
+          <div class="mb-6 flex flex-wrap gap-3 items-center justify-between">
+            <div>
+              <p class="text-sm font-bold text-green-600 mb-2">YOUR CART</p>
+              <h1 class="text-4xl font-black">Shopping Cart</h1>
+            </div>
+
+            <button onclick="continueShopping()" class="bg-slate-100 hover:bg-slate-200 px-5 py-3 rounded-2xl font-bold transition">
+              ← Continue Shopping
+            </button>
+          </div>
+
+          <div class="grid lg:grid-cols-[1fr_360px] gap-6">
+            <div class="space-y-4">
+              ${itemsHtml}
+            </div>
+
+            <aside>
+              <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sticky top-28">
+                <h2 class="text-2xl font-black mb-5">Order Summary</h2>
+
+                <div class="space-y-4 text-sm">
+                  <div class="flex justify-between text-slate-600">
+                    <span>Total Items</span>
+                    <span class="font-bold text-slate-900">${summary.totalItems}</span>
+                  </div>
+
+                  <div class="flex justify-between text-slate-600">
+                    <span>Subtotal</span>
+                    <span class="font-bold text-slate-900">${formatPrice(summary.subtotal)}</span>
+                  </div>
+
+                  <div class="flex justify-between text-slate-600">
+                    <span>Delivery</span>
+                    <span class="font-bold text-slate-900">${formatPrice(summary.delivery)}</span>
+                  </div>
+
+                  <div class="border-t border-slate-200 pt-4 flex justify-between text-lg">
+                    <span class="font-black">Grand Total</span>
+                    <span class="font-black text-green-600">${formatPrice(summary.total)}</span>
+                  </div>
+                </div>
+
+                <button onclick="renderCheckoutScreen()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl font-black transition">
+                  Proceed to Checkout
+                </button>
+
+                <div class="mt-4 bg-slate-50 rounded-2xl p-4 text-sm text-slate-500 leading-7">
+                  Free delivery on orders above <span class="font-bold text-slate-900">₹500</span>.
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+      `;
+    }
+
+    function plusItem(id) {
+      const fruit = getFruitById(id);
+      if (!fruit) return;
+
+      const maxStock = Number(fruit.stock || 999);
+      cart[id] = (Number(cart[id]) || 0) + 1;
+
+      if (cart[id] > maxStock) {
+        cart[id] = maxStock;
+        alert(`Only ${maxStock} items available`);
+      }
+
+      saveCart();
+      renderCartPage();
+    }
+
+    function minusItem(id) {
+      if (!cart[id]) return;
+
+      if (Number(cart[id]) > 1) cart[id] = Number(cart[id]) - 1;
+      else delete cart[id];
+
+      saveCart();
+      renderCartPage();
+    }
+
+    function removeItem(id) {
+      delete cart[id];
+      saveCart();
+      renderCartPage();
+    }
+
+    function renderCheckoutScreen(prefillOrder = null) {
+      if (Object.keys(cart).length === 0) {
+        alert("Your cart is empty");
+        return;
+      }
+
+      const summary = getCartSummary();
+      const addressParts = prefillOrder?.addressParts || {};
+
+      const savedName = prefillOrder ? (prefillOrder.name || "") : "";
+      const savedPhone = prefillOrder ? (prefillOrder.phone || "") : "";
+      const savedAddressLine = prefillOrder ? (addressParts.addressLine || "") : "";
+      const savedLandmark = prefillOrder ? (addressParts.landmark || "") : "";
+      const savedCity = prefillOrder ? (addressParts.city || "") : "";
+      const savedPincode = prefillOrder ? (addressParts.pincode || "") : "";
+
+      document.getElementById("app").innerHTML = `
+        <section class="max-w-7xl mx-auto px-4 md:px-6 py-8">
+          <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-bold text-green-600 mb-2">CHECKOUT</p>
+              <h1 class="text-4xl md:text-5xl font-black">Secure Checkout</h1>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+              <button onclick="renderCartPage()" class="bg-slate-100 hover:bg-slate-200 px-5 py-3 rounded-2xl font-bold transition">
+                ← Back to Cart
+              </button>
+
+              <button onclick="clearCheckoutForm()" class="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-3 rounded-2xl font-bold transition">
+                Reset Form
+              </button>
+            </div>
+          </div>
+
+          <div class="grid xl:grid-cols-[1.1fr_0.9fr] gap-6">
+            <div class="space-y-6">
+              <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div class="mb-6">
+                  <p class="text-sm font-bold text-slate-500 mb-2">CUSTOMER DETAILS</p>
+                  <h2 class="text-3xl font-black">Delivery Information</h2>
+                  <p class="text-slate-500 mt-2 leading-7">
+                    Enter delivery details for this order.
+                  </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Full Name</label>
+                    <input
+                      id="custName"
+                      value="${escapeHtml(savedName)}"
+                      placeholder="Enter full name"
+                      class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                      maxlength="50"
+                    >
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Phone Number</label>
+                    <input
+                      id="custPhone"
+                      value="${escapeHtml(savedPhone)}"
+                      placeholder="Enter 10-digit mobile number"
+                      class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                      maxlength="10"
+                      inputmode="numeric"
+                    >
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <label class="block text-sm font-bold text-slate-700 mb-2">Flat / House No / Area</label>
+                  <input
+                    id="custAddressLine"
+                    value="${escapeHtml(savedAddressLine)}"
+                    placeholder="House no, street, area"
+                    class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                    maxlength="120"
+                  >
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Nearby Landmark</label>
+                    <input
+                      id="custLandmark"
+                      value="${escapeHtml(savedLandmark)}"
+                      placeholder="School, temple, market, etc."
+                      class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                      maxlength="80"
+                    >
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">City</label>
+                    <input
+                      id="custCity"
+                      value="${escapeHtml(savedCity)}"
+                      placeholder="Enter city"
+                      class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                      maxlength="50"
+                    >
+                  </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Pincode</label>
+                    <input
+                      id="custPincode"
+                      value="${escapeHtml(savedPincode)}"
+                      placeholder="6-digit pincode"
+                      class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500"
+                      maxlength="6"
+                      inputmode="numeric"
+                    >
+                  </div>
+
+                  <div class="bg-slate-50 rounded-2xl p-4 flex flex-col justify-center">
+                    <p class="text-sm text-slate-500 mb-1">Items in Cart</p>
+                    <p class="text-2xl font-black">${summary.totalItems}</p>
+                  </div>
+                </div>
+
+                <button onclick="confirmCheckout()" class="w-full mt-8 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-black transition text-lg">
+                  Proceed to Pay
+                </button>
+              </div>
+            </div>
+
+            <aside class="space-y-6">
+              <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                <p class="text-sm font-bold text-slate-500 mb-2">ITEMS</p>
+                <h3 class="text-2xl font-black mb-5">Cart Items</h3>
+                <div class="space-y-1">
+                  ${getCheckoutItemsHtml()}
+                </div>
+              </div>
+
+              <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                <p class="text-sm font-bold text-slate-500 mb-2">ORDER SUMMARY</p>
+                <h3 class="text-2xl font-black mb-5">Payment Overview</h3>
+
+                <div class="space-y-4">
+                  <div class="bg-slate-50 rounded-2xl p-4 flex justify-between items-center">
+                    <span class="text-slate-600">Total Items</span>
+                    <span class="font-black">${summary.totalItems}</span>
+                  </div>
+
+                  <div class="bg-slate-50 rounded-2xl p-4 flex justify-between items-center">
+                    <span class="text-slate-600">Subtotal</span>
+                    <span class="font-black">${formatPrice(summary.subtotal)}</span>
+                  </div>
+
+                  <div class="bg-slate-50 rounded-2xl p-4 flex justify-between items-center">
+                    <span class="text-slate-600">Delivery</span>
+                    <span class="font-black">${formatPrice(summary.delivery)}</span>
+                  </div>
+
+                  <div class="bg-green-50 border border-green-100 rounded-2xl p-5 flex justify-between items-center">
+                    <span class="text-lg font-black">Grand Total</span>
+                    <span class="text-2xl font-black text-green-600">${formatPrice(summary.total)}</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+      `;
+    }
+
+    function confirmCheckout() {
+      const nameInput = document.getElementById("custName");
+      const phoneInput = document.getElementById("custPhone");
+      const addressLineInput = document.getElementById("custAddressLine");
+      const landmarkInput = document.getElementById("custLandmark");
+      const cityInput = document.getElementById("custCity");
+      const pincodeInput = document.getElementById("custPincode");
+
+      const name = nameInput ? nameInput.value.trim() : "";
+      const phone = phoneInput ? phoneInput.value.trim() : "";
+      const addressLine = addressLineInput ? addressLineInput.value.trim() : "";
+      const landmark = landmarkInput ? landmarkInput.value.trim() : "";
+      const city = cityInput ? cityInput.value.trim() : "";
+      const pincode = pincodeInput ? pincodeInput.value.trim() : "";
+
+      if (!name || !phone || !addressLine || !landmark || !city || !pincode) {
+        alert("Please fill all checkout details");
+        return;
+      }
+
+      if (!/^[A-Za-z ]{2,50}$/.test(name)) {
+        alert("Please enter a valid full name");
+        if (nameInput) nameInput.focus();
+        return;
+      }
+
+      if (!/^[6-9]\d{9}$/.test(phone)) {
+        alert("Please enter a valid 10-digit mobile number");
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
+
+      if (!/^[A-Za-z ]{2,50}$/.test(city)) {
+        alert("Please enter a valid city name");
+        if (cityInput) cityInput.focus();
+        return;
+      }
+
+      if (!/^\d{6}$/.test(pincode)) {
+        alert("Please enter a valid 6-digit pincode");
+        if (pincodeInput) pincodeInput.focus();
+        return;
+      }
+
+      if (addressLine.length < 5) {
+        alert("Please enter a proper house no / street / area");
+        if (addressLineInput) addressLineInput.focus();
+        return;
+      }
+
+      if (landmark.length < 3) {
+        alert("Please enter a nearby landmark");
+        if (landmarkInput) landmarkInput.focus();
+        return;
+      }
+
+      const summary = getCartSummary();
+      const fullAddress = `${addressLine}, Near ${landmark}, ${city} - ${pincode}`;
+
+      pendingOrder = {
+        id: generateOrderId(),
+        user: getLoggedInUser(),
+        name,
+        phone,
+        address: fullAddress,
+        addressParts: {
+          addressLine,
+          landmark,
+          city,
+          pincode
+        },
+        items: { ...cart },
+        subtotal: summary.subtotal,
+        delivery: summary.delivery,
+        total: summary.total,
+        date: new Date().toLocaleString(),
+        status: "Order Confirmed",
+        paymentMethod: ""
+      };
+
+      renderPaymentMethods();
+    }
+
+    /* =========================================================
+       PAYMENT SETTINGS Automatic (yahan badlo)
+       ========================================================= */
+    const UPI_ID = "9122437214@ybl";   // Aapka UPI ID. QR me jata hai, screen par DIKHTA NAHI.
+    const UPI_CHECK_DELAY = 20000;      // QR dikhne ke itne ms (20 sec) baad "payment check" shuru
+    const UPI_VERIFY_TIME = 10000;      // check itne ms (10 sec) chalega, phir "Payment Done"
+    const UPI_SUCCESS_PAUSE = 2000;    // "Payment Done" dikhne ke baad success page tak ruknaa
+
+    /* UPI ke timers (Back dabane par band ho jaate hain) */
+    let upiTimers = [];
+    function clearUpiTimers() {
+      upiTimers.forEach(clearTimeout);
+      upiTimers = [];
+    }
+
+    /* =========================================================
+       STEP: PAYMENT METHOD CHUNNA (UPI ya Cash on Delivery)
+       ========================================================= */
+    function renderPaymentMethods() {
+      clearUpiTimers();
+
+      if (!pendingOrder) {
+        renderCheckoutScreen();
+        return;
+      }
+
+      document.getElementById("app").innerHTML = `
+        <section class="max-w-3xl mx-auto px-4 md:px-6 py-8">
+          <button onclick="renderCheckoutScreen(pendingOrder)" class="mb-5 bg-slate-100 hover:bg-slate-200 px-5 py-3 rounded-2xl font-bold transition">
+            ← Back
+          </button>
+
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8 text-center">
+            <h2 class="text-3xl font-black mb-2">Select Payment Method</h2>
+            <p class="text-slate-500 mb-2">Order ID: <b>${escapeHtml(pendingOrder.id)}</b></p>
+            <p class="text-slate-500 mb-8">Total ${formatPrice(pendingOrder.total)}</p>
+
+            <div class="space-y-4">
+              <button onclick="showUPIScreen()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-black transition">
+                UPI / QR Pay
+              </button>
+
+              <button onclick="finalizeOrder('Cash on Delivery')" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-2xl font-black transition">
+                Cash on Delivery
+              </button>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    /* =========================================================
+       STEP: UPI / QR PAYMENT
+       Flow:  QR dikhta hai
+              -> 5 sec baad "Checking your payment..." (reload animation)
+              -> 3 sec baad "Payment Done" ✓
+              -> order confirm + success page
+       ========================================================= */
+    function backFromUpi() {
+      clearUpiTimers();
+      renderPaymentMethods();
+    }
+
+    function showUpiChecking() {
+      const stage = document.getElementById("upi-stage");
+      if (!stage) return;
+
+      stage.innerHTML = `
+        <div class="upi-spinner"></div>
+        <p class="text-xl font-black mt-6">Checking your payment...</p>
+        <div class="w-64 h-2 bg-slate-100 rounded-full mt-5 overflow-hidden">
+          <div id="upi-bar" class="h-2 bg-green-500 rounded-full" style="width:0%;transition:width ${UPI_VERIFY_TIME}ms linear"></div>
+        </div>
+      `;
+
+      const hint = document.getElementById("upi-hint");
+      if (hint) hint.innerText = "Please wait, do not close or refresh this page.";
+
+      const actions = document.getElementById("upi-actions");
+      if (actions) actions.classList.add("hidden");
+
+      /* progress bar ko 0% se 100% tak chalao */
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const bar = document.getElementById("upi-bar");
+          if (bar) bar.style.width = "100%";
+        });
+      });
+    }
+
+    function showUpiDone() {
+      const stage = document.getElementById("upi-stage");
+      if (!stage) return;
+
+      stage.innerHTML = `
+        <div class="upi-check">✓</div>
+        <p class="text-3xl font-black text-green-600 mt-5">Payment Done</p>
+        <p class="text-slate-500 mt-1">Confirming your order...</p>
+      `;
+
+      const hint = document.getElementById("upi-hint");
+      if (hint) hint.innerText = "";
+    }
+
+    function showUPIScreen() {
+      if (!pendingOrder) return;
+      clearUpiTimers();
+
+      const upiLink =
+        `upi://pay?pa=${UPI_ID}` +
+        `&pn=${encodeURIComponent("Mantu Fruits")}` +
+        `&am=${pendingOrder.total}` +
+        `&cu=INR` +
+        `&tn=${encodeURIComponent("Order " + pendingOrder.id)}`;
+
+      document.getElementById("app").innerHTML = `
+        <section class="max-w-3xl mx-auto px-4 md:px-6 py-8">
+          <button onclick="backFromUpi()" class="mb-5 bg-slate-100 hover:bg-slate-200 px-5 py-3 rounded-2xl font-bold transition">
+            ← Back
+          </button>
+
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8 text-center">
+            <h2 class="text-3xl font-black mb-2">UPI Payment</h2>
+            <p class="text-slate-500 mb-2">Order ID: <b>${escapeHtml(pendingOrder.id)}</b></p>
+            <p class="text-slate-500 mb-5">Pay <b class="text-green-600">${formatPrice(pendingOrder.total)}</b></p>
+
+            <!-- QR / checking / done yahan badalta hai -->
+            <div id="upi-stage" class="flex flex-col items-center justify-center min-h-[300px] mb-4">
+              <div id="qrcode" class="bg-white p-4 rounded-3xl border border-slate-200"></div>
+            </div>
+
+            <p id="upi-hint" class="text-slate-500 mb-6">Scan this QR with any UPI app (GPay, PhonePe, Paytm) to pay.</p>
+
+            <div id="upi-actions" class="flex flex-wrap justify-center gap-3">
+              <a href="${upiLink}" class="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-black transition">
+                Pay Now
+              </a>
+            </div>
+          </div>
+        </section>
+      `;
+
+      /* QR banao, QR ban jaane ke BAAD 5 sec ka timer shuru karo */
+      upiTimers.push(setTimeout(() => {
+        const qrBox = document.getElementById("qrcode");
+        if (!qrBox) return;
+
+        if (typeof QRCode === "undefined") {
+          qrBox.innerHTML = "<p class='text-red-500 font-bold'>QR failed to load. Please go back and try again.</p>";
+          return;
+        }
+
+        qrBox.innerHTML = "";
+        new QRCode(qrBox, { text: upiLink, width: 220, height: 220 });
+
+        upiTimers.push(setTimeout(() => {
+          showUpiChecking();
+
+          upiTimers.push(setTimeout(() => {
+            showUpiDone();
+
+            upiTimers.push(setTimeout(() => {
+              finalizeOrder("UPI");
+            }, UPI_SUCCESS_PAUSE));
+          }, UPI_VERIFY_TIME));
+        }, UPI_CHECK_DELAY));
+      }, 100));
+    }
+
+    /* =========================================================
+       ORDER DATA GOOGLE SHEET ME BHEJNA
+       ========================================================= */
+    function sendOrderToSheet(order) {
+      if (!window.QRSheet) return;
+
+      QRSheet.send("order", {
+        orderId: order.id,
+        status: order.status,
+        username: order.user,
+        name: order.name,
+        phone: order.phone,
+        address: order.address,
+        items: QROrders.getOrderLines(order),
+        subtotal: order.subtotal,
+        delivery: order.delivery,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        paymentNote: QROrders.getPaymentInfo(order).owner
+      });
+    }
+
+    /* =========================================================
+       ORDER PAKKA KARNA (COD ya UPI ke baad)
+       Kya hota hai:
+         1) Order browser me save
+         2) Google Sheet me bhejna
+         3) Shop owner ke WhatsApp par order message khulna
+         4) Success page dikhna
+       ========================================================= */
+    function finalizeOrder(paymentMethod) {
+      if (!pendingOrder) return;
+      clearUpiTimers();
+
+      const finalOrder = {
+        ...pendingOrder,
+        paymentMethod,
+        status: "Order Confirmed",
+        createdAt: Date.now(),              // delivery progress isi time se chalta hai
+        date: new Date().toLocaleString()
+      };
+
+      /* items ka naam/price order ke saath save (baad me price badle to bill na badle) */
+      finalOrder.itemsDetail = QROrders.getOrderLines(finalOrder);
+      finalOrder.paymentStatus = QROrders.getPaymentInfo(finalOrder).owner;
+
+      const orders = JSON.parse(localStorage.getItem(STORAGE.ORDERS)) || [];
+      orders.push(finalOrder);
+      localStorage.setItem(STORAGE.ORDERS, JSON.stringify(orders));
+      localStorage.setItem(STORAGE.CURRENT_ORDER_ID, finalOrder.id);
+      localStorage.setItem(STORAGE.CURRENT_ORDER, JSON.stringify(finalOrder));
+      localStorage.setItem(STORAGE.TRACK_ORDER_ID, finalOrder.id);
+      localStorage.removeItem(STORAGE.CART);
+      localStorage.removeItem(STORAGE.CUST_NAME);
+      localStorage.removeItem(STORAGE.CUST_PHONE);
+      localStorage.removeItem(STORAGE.CUST_ADDRESS);
+      cart = {};
+      pendingOrder = null;
+
+      sendOrderToSheet(finalOrder);
+
+      const opened = QROrders.openWhatsApp(QROrders.buildOrderMessage(finalOrder));
+      renderSuccessScreen(finalOrder);
+
+      /* Browser ne WhatsApp tab roka (UPI me aksar hota hai) to isi tab me khol do */
+      if (!opened) redirectToWhatsAppSoon(finalOrder);
+    }
+
+    function redirectToWhatsAppSoon(order) {
+      const note = document.getElementById("wa-redirect-note");
+      if (note) note.classList.remove("hidden");
+
+      setTimeout(() => {
+        window.location.href = QROrders.whatsappUrl(QROrders.buildOrderMessage(order));
+      }, 3000);
+    }
+
+    /* =========================================================
+       SUCCESS PAGE
+       ========================================================= */
+    function renderSuccessScreen(order) {
+      const pay = QROrders.getPaymentInfo(order);
+
+      document.getElementById("app").innerHTML = `
+        <section class="max-w-4xl mx-auto px-4 md:px-6 py-12">
+          <div class="relative overflow-hidden bg-white rounded-[32px] border border-slate-200 shadow-sm p-6 md:p-10 text-center">
+            <div class="absolute inset-x-0 top-0 h-28 pointer-events-none">
+              <span class="confetti-piece left-[8%] bg-green-400" style="animation-delay:0s"></span>
+              <span class="confetti-piece left-[18%] bg-yellow-400" style="animation-delay:0.3s"></span>
+              <span class="confetti-piece left-[30%] bg-orange-400" style="animation-delay:0.5s"></span>
+              <span class="confetti-piece left-[42%] bg-pink-400" style="animation-delay:0.8s"></span>
+              <span class="confetti-piece left-[56%] bg-blue-400" style="animation-delay:1s"></span>
+              <span class="confetti-piece left-[68%] bg-purple-400" style="animation-delay:1.2s"></span>
+              <span class="confetti-piece left-[80%] bg-emerald-400" style="animation-delay:1.5s"></span>
+              <span class="confetti-piece left-[90%] bg-amber-400" style="animation-delay:1.8s"></span>
+            </div>
+
+            <div class="boom-pop relative z-10">
+              <div class="w-24 h-24 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-5xl mx-auto mb-5 shadow-sm">
+                🎉
+              </div>
+
+              <p class="text-sm font-bold text-green-600 mb-2">${order.paymentMethod === "Cash on Delivery" ? "ORDER PLACED" : "PAYMENT SUCCESS"}</p>
+              <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-3">Congratulations!</h1>
+              <p class="text-xl font-bold text-green-600 mb-6">Boom! Your order is confirmed</p>
+
+              <div class="grid md:grid-cols-2 gap-4 text-left max-w-2xl mx-auto mb-8">
+                <div class="bg-slate-50 rounded-2xl p-4">
+                  <p class="text-sm text-slate-500 mb-1">Order ID</p>
+                  <p class="font-black text-lg">${escapeHtml(order.id)}</p>
+                </div>
+                <div class="bg-slate-50 rounded-2xl p-4">
+                  <p class="text-sm text-slate-500 mb-1">Payment</p>
+                  <p class="font-black text-lg">${escapeHtml(pay.label)}</p>
+                  <p class="text-sm text-green-600 font-bold">${escapeHtml(pay.customer)}</p>
+                </div>
+                <div class="bg-slate-50 rounded-2xl p-4">
+                  <p class="text-sm text-slate-500 mb-1">Customer Name</p>
+                  <p class="font-black text-lg">${escapeHtml(order.name)}</p>
+                </div>
+                <div class="bg-slate-50 rounded-2xl p-4">
+                  <p class="text-sm text-slate-500 mb-1">Grand Total</p>
+                  <p class="font-black text-lg text-green-600">${formatPrice(order.total)}</p>
+                </div>
+                <div class="bg-slate-50 rounded-2xl p-4 md:col-span-2">
+                  <p class="text-sm text-slate-500 mb-1">Delivery Address</p>
+                  <p class="font-black text-lg leading-7">${escapeHtml(order.address)}</p>
+                </div>
+              </div>
+
+              <p id="wa-redirect-note" class="hidden text-sm font-bold text-green-700 mb-5">
+                Opening WhatsApp to share your order details with the shop...
+              </p>
+
+              <div class="grid sm:grid-cols-3 gap-3">
+                <button onclick="trackCurrentOrder()" class="bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-2xl font-black transition">
+                  Track Order
+                </button>
+                <button onclick="goHome()" class="bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl font-black transition">
+                  Go Home
+                </button>
+                <button onclick="downloadBill()" class="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl font-black transition">
+                  Download Bill
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function trackCurrentOrder() {
+      window.location.href = "tracking.html";
+    }
+
+    function goHome() {
+      window.location.href = "index.html";
+    }
+
+    /* Bill (PDF) download: code orders.js me hai */
+    function downloadBill() {
+      QROrders.downloadBill(getCurrentOrder());
+    }
+
+    renderCartPage();
+  </script>
+</body>
+</html>
