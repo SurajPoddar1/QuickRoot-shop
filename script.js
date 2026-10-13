@@ -44,8 +44,8 @@ const categories = [
    - Agar future me aur products chahiye to isi array me add karo
    ========================================================= */
 const baseFruitData = [
-  { id: 1, cat: "Anar", name: "Kandhari Anar", price: 180, discount: 20, img: "anar1.webp" },
-  { id: 2, cat: "Anar", name: "Bhagwa Anar", price: 180, discount: 20, img: "anar2.webp" },
+  { id: 1, cat: "Anar", name: "Kandhari Anar", price: 180, discount: 20, img: "anar1.jpg" },
+  { id: 2, cat: "Anar", name: "Bhagwa Anar", price: 180, discount: 20, img: "anar2.jpg" },
   { id: 3, cat: "Anar", name: "Ruby Anar", price: 180, discount: 20, img: "anar3.jpg" },
   { id: 4, cat: "Anar", name: "Desi Anar", price: 180, discount: 20, img: "anar4.jpg" },
   { id: 5, cat: "Anar", name: "Fresh Red Anar", price: 180, discount: 20, img: "anar5.jpg" },
