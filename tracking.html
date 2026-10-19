@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- =====================================================
+       BASIC PAGE SETUP
+       ===================================================== -->
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickRoot | Track Order</title>
+
+  <!-- UI LIBRARY -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- GOOGLE FONT -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- ICONS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- BILL (PDF) LIBRARY: Download Bill ke liye zaroori -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Google Sheet sender + shared order code -->
+  <script src="sheet.js?v=20261019a"></script>
+  <script src="orders.js?v=20261019a"></script>
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #f8fafc;
+    }
+
+    .glass-card {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+    }
+
+    /* ---------- Delivery progress (dhire dhire green hota hai) ---------- */
+
+    /* Step ka gola: pehle grey, phir green */
+    .step-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      flex: none;
+      transition: background 0.8s ease, transform 0.5s ease;
+    }
+    .step-dot.done { background: #16a34a; }
+
+    /* Jo step abhi chal raha hai wo halka sa dhadakta hai */
+    .step-dot.current { animation: stepPulse 1.8s ease-in-out infinite; }
+    @keyframes stepPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(22,163,74,0.55); }
+      70%  { box-shadow: 0 0 0 12px rgba(22,163,74,0); }
+      100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
+    }
+
+    /* Do steps ke beech ki line: andar ka green hissa upar se neeche bharta hai */
+    .step-line {
+      position: relative;
+      width: 4px;
+      height: 56px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      margin-left: 18px;
+      overflow: hidden;
+    }
+    .step-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 0%;
+      background: #16a34a;
+      border-radius: 999px;
+      transition: height 1s linear;
+    }
+
+    /* Cancelled order me progress dhundhla */
+    .is-cancelled .step-dot,
+    .is-cancelled .step-line { opacity: 0.45; }
+  </style>
+</head>
+
+<body class="text-slate-900">
+
+  <!-- =====================================================
+       NAVBAR
+       ===================================================== -->
+  <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+      <a href="index.html" class="text-3xl font-black text-green-600 tracking-tight">
+        Quick<span class="text-orange-500">Root</span>
+      </a>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <a href="index.html" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-2xl font-bold transition">
+          Home
+        </a>
+        <button onclick="goProfile()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-2xl font-bold transition">
+          Profile
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-6 py-8">
+
+    <!-- =====================================================
+         ORDER ID SE SEARCH
+         ===================================================== -->
+    <section class="glass-card rounded-3xl border border-slate-200 shadow-sm p-6 mb-6">
+      <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+        <div>
+          <p class="text-sm font-bold text-green-600 mb-2">ORDER TRACKING</p>
+          <h1 class="text-3xl md:text-5xl font-black">Track Your Order</h1>
+        </div>
+
+        <div class="w-full xl:max-w-2xl">
+          <div class="grid sm:grid-cols-[1fr_auto_auto] gap-3">
+            <input
+              id="order-id-input"
+              type="text"
+              placeholder="Enter Order ID"
+              class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 uppercase"
+            >
+            <button onclick="findOrder()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-black transition whitespace-nowrap">
+              Track Order
+            </button>
+            <button onclick="resetTrackingSession()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-5 py-3 rounded-2xl font-black transition whitespace-nowrap">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid xl:grid-cols-[1.25fr_0.75fr] gap-6">
+
+      <!-- ================= LEFT: STATUS + PROGRESS + ITEMS ================= -->
+      <div class="space-y-6">
+        <div id="status-card" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8">
+
+          <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+            <div>
+              <p class="text-sm text-slate-500 font-bold mb-2">TRACK STATUS</p>
+              <h2 id="tracking-title" class="text-3xl font-black">Order Details</h2>
+            </div>
+            <div id="status-badge" class="bg-green-50 text-green-700 px-4 py-2 rounded-2xl font-bold">
+              Order Confirmed
+            </div>
+          </div>
+
+          <!-- Jab koi order selected na ho -->
+          <div id="empty-state" class="hidden text-center py-14"></div>
+
+          <!-- Order ka asli data -->
+          <div id="tracking-content">
+
+            <!-- Cancel hone par ye laal box dikhta hai -->
+            <div id="cancel-banner" class="hidden mb-6 bg-red-50 border border-red-200 text-red-800 rounded-2xl p-5">
+              <p class="font-black text-lg mb-1">This order was cancelled</p>
+              <p id="cancel-banner-text" class="text-sm leading-6"></p>
+            </div>
+
+            <!-- Upar ke 4 chhote box -->
+            <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+              <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-sm text-slate-500">Order ID</p>
+                <p id="order-id-box" class="font-black mt-1 text-lg break-all">-</p>
+              </div>
+              <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-sm text-slate-500">Order Date</p>
+                <p id="order-date" class="font-black mt-1">-</p>
+              </div>
+              <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-sm text-slate-500">Payment</p>
+                <p id="payment-method" class="font-black mt-1">-</p>
+                <p id="payment-status" class="text-xs font-bold text-green-600 mt-1"></p>
+              </div>
+              <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-sm text-slate-500">Grand Total</p>
+                <p id="order-total" class="font-black mt-1 text-green-600 text-lg">₹0</p>
+              </div>
+            </div>
+
+            <!-- DELIVERY PROGRESS (JS se bhara jata hai) -->
+            <div class="mb-8">
+              <h3 class="text-2xl font-black mb-5">Delivery Progress</h3>
+              <div id="stepper"></div>
+            </div>
+
+            <!-- ITEMS -->
+            <div>
+              <h3 class="text-2xl font-black mb-5">Items in This Order</h3>
+              <div id="order-items" class="space-y-3"></div>
+
+              <div id="bill-summary" class="mt-5 bg-slate-50 rounded-2xl p-5 text-sm space-y-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= RIGHT: DETAILS + ETA + ACTIONS ================= -->
+      <aside class="space-y-6">
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <h3 class="text-2xl font-black mb-5">Delivery Details</h3>
+          <div class="space-y-4 text-sm">
+            <div class="bg-slate-50 rounded-2xl p-4">
+              <p class="text-slate-500 mb-1">Name</p>
+              <p id="customer-name" class="font-black text-base">-</p>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-4">
+              <p class="text-slate-500 mb-1">Phone</p>
+              <p id="customer-phone" class="font-black text-base">-</p>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-4">
+              <p class="text-slate-500 mb-1">Address</p>
+              <p id="customer-address" class="font-black text-base leading-7">-</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <h3 class="text-2xl font-black mb-4">Estimated Delivery</h3>
+          <p class="text-slate-500 mb-2">Expected within</p>
+          <p id="eta-time" class="text-4xl font-black text-green-600">-</p>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <h3 class="text-2xl font-black mb-4">Quick Actions</h3>
+          <div class="grid gap-3">
+            <button id="bill-btn" onclick="downloadCurrentBill()" class="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl font-black transition">
+              Download Bill
+            </button>
+
+            <!-- Cancel sirf tab dikhta hai jab order cancel ho sakta hai -->
+            <button id="cancel-btn" onclick="openCancelModal()" class="hidden bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-3 rounded-2xl font-black transition">
+              Cancel Order
+            </button>
+
+            <button onclick="resetTrackingSession()" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-2xl font-black transition">
+              Reset Tracking
+            </button>
+            <button onclick="goHome()" class="bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl font-black transition">
+              Back to Home
+            </button>
+          </div>
+          <p id="cancel-help" class="hidden text-xs text-slate-500 mt-4 leading-5">
+            Order sirf "Order Confirmed" ya "Packed" step me cancel ho sakta hai. "Out for Delivery" ke baad cancel nahi hota.
+          </p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <!-- =====================================================
+       CANCEL ORDER POPUP
+       ===================================================== -->
+  <div id="cancel-modal" class="hidden fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 md:p-8">
+      <h3 class="text-2xl font-black mb-1">Cancel this order?</h3>
+      <p class="text-slate-500 mb-5">Order ID: <b id="cancel-modal-id"></b></p>
+
+      <label class="block text-sm font-bold mb-2" for="cancel-reason">Reason</label>
+      <select id="cancel-reason" class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-red-400 mb-3">
+        <option>Ordered by mistake</option>
+        <option>Changed my mind</option>
+        <option>Delivery is taking too long</option>
+        <option>Want to change items or address</option>
+        <option>Other</option>
+      </select>
+
+      <p id="cancel-refund-note" class="hidden text-sm bg-amber-50 text-amber-800 rounded-2xl p-3 mb-3 leading-6">
+        Aapne UPI se payment kiya hai. Cancel ke baad refund ke liye shop se WhatsApp par baat karein.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button onclick="closeCancelModal()" class="bg-slate-100 hover:bg-slate-200 py-3 rounded-2xl font-black transition">
+          Keep Order
+        </button>
+        <button onclick="confirmCancel()" class="bg-red-600 hover:bg-red-700 text-white py-3 rounded-2xl font-black transition">
+          Yes, Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================
+       STORAGE KEYS (browser me data ke naam)
+       ===================================================== */
+    const STORAGE = {
+      TRACK_ORDER_ID: "trackOrderId",
+      CURRENT_ORDER_ID: "currentOrderId",
+      CURRENT_ORDER: "currentOrder",
+      FRUIT_DATA: "fruitData",
+      IS_LOGIN: "isLogin"
+    };
+
+    const fruitData = JSON.parse(localStorage.getItem(STORAGE.FRUIT_DATA)) || [];
+
+    /* Jo order abhi screen par khula hai uski id */
+    let shownOrderId = "";
+    /* Stepper ek hi baar banta hai */
+    let stepperBuilt = false;
+
+    /* =====================================================
+       CHHOTE HELPERS
+       ===================================================== */
+    function $(id) { return document.getElementById(id); }
+
+    function formatPrice(value) { return `₹${Number(value) || 0}`; }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function goHome() { window.location.href = "index.html"; }
+
+    function goProfile() {
+      if (localStorage.getItem(STORAGE.IS_LOGIN) !== "true") {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "profile.html";
+    }
+
+    /* Status ke hisaab se badge ke colors */
+    function getBadgeClass(status) {
+      const base = "px-4 py-2 rounded-2xl font-bold ";
+      if (status === "Cancelled")        return base + "bg-red-50 text-red-700";
+      if (status === "Delivered")        return base + "bg-green-100 text-green-800";
+      if (status === "Out for Delivery") return base + "bg-amber-50 text-amber-700";
+      if (status === "Packed")           return base + "bg-blue-50 text-blue-700";
+      return base + "bg-green-50 text-green-700";
+    }
+
+    /* =====================================================
+       DELIVERY STEPPER BANANA (sirf ek baar)
+       ===================================================== */
+    function buildStepper() {
+      const steps = QROrders.STEPS;
+      let html = "";
+
+      steps.forEach((step, i) => {
+        const n = i + 1;
+        html += `
+          <div class="flex gap-4">
+            <div id="dot-${n}" class="step-dot">${n}</div>
+            <div class="pt-1">
+              <p class="font-black">${escapeHtml(step.status)}</p>
+              <p class="text-slate-500 text-sm">${escapeHtml(step.desc)}</p>
+              <p id="time-${n}" class="text-xs text-green-700 font-bold mt-1"></p>
+            </div>
+          </div>
+        `;
+        if (n < steps.length) {
+          html += `<div class="step-line"><div id="fill-${n}" class="step-fill"></div></div>`;
+        }
+      });
+
+      $("stepper").innerHTML = html;
+      stepperBuilt = true;
+    }
+
+    /* Order ke hisaab se dots aur lines green karo */
+    function paintProgress(order) {
+      if (!stepperBuilt) buildStepper();
+
+      const p = QROrders.getProgress(order);
+
+      for (let n = 1; n <= 4; n++) {
+        const dot = $(`dot-${n}`);
+        const timeEl = $(`time-${n}`);
+        const reached = !p.cancelled && n <= p.step;
+
+        dot.className = "step-dot" + (reached ? " done" : "") + (reached && n === p.step && p.step < 4 ? " current" : "");
+        timeEl.innerText = reached ? QROrders.getStepTime(order, n) : "";
+      }
+
+      for (let n = 1; n <= 3; n++) {
+        $(`fill-${n}`).style.height = (p.cancelled ? 0 : p.lines[n - 1]) + "%";
+      }
+
+      $("status-card").classList.toggle("is-cancelled", p.cancelled);
+
+      return p;
+    }
+
+    /* =====================================================
+       EMPTY STATE (koi order selected nahi / nahi mila)
+       ===================================================== */
+    function showEmpty(message = "") {
+      shownOrderId = "";
+
+      $("empty-state").classList.remove("hidden");
+      $("tracking-content").classList.add("hidden");
+      $("status-badge").classList.add("hidden");
+      $("tracking-title").innerText = "Order Details";
+      $("cancel-btn").classList.add("hidden");
+      $("cancel-help").classList.add("hidden");
+      $("eta-time").innerText = "-";
+      clearDetails();
+
+      if (message) {
+        $("empty-state").innerHTML = `
+          <div class="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-4xl mx-auto mb-5 shadow-sm">🔎</div>
+          <h3 class="text-3xl font-black mb-2">Order not found</h3>
+          <p class="text-slate-500 max-w-lg mx-auto leading-7">${escapeHtml(message)}</p>
+        `;
+      } else {
+        $("empty-state").innerHTML = `
+          <div class="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center text-4xl mx-auto mb-5 shadow-sm">📦</div>
+          <h3 class="text-3xl font-black mb-2">No order selected</h3>
+          <p class="text-slate-500 max-w-lg mx-auto leading-7">
+            Order ID enter karo ya naya order place karo. Selected order ki tracking details yahan dikhengi.
+          </p>
+        `;
+      }
+    }
+
+    function clearDetails() {
+      ["customer-name", "customer-phone", "customer-address"].forEach((id) => { $(id).innerText = "-"; });
+    }
+
+    /* =====================================================
+       RESET
+       ===================================================== */
+    function resetTrackingSession() {
+      localStorage.removeItem(STORAGE.TRACK_ORDER_ID);
+      localStorage.removeItem(STORAGE.CURRENT_ORDER_ID);
+      localStorage.removeItem(STORAGE.CURRENT_ORDER);
+
+      const input = $("order-id-input");
+      if (input) input.value = "";
+
+      showEmpty();
+    }
+
+    /* =====================================================
+       ITEMS KI LIST + BILL SUMMARY
+       ===================================================== */
+    function getOrderItemsHtml(order) {
+      const lines = QROrders.getOrderLines(order);
+      if (!lines.length) return `<p class="text-slate-500">No items found for this order.</p>`;
+
+      return lines.map((item) => {
+        const fruit = fruitData.find((f) => String(f.id) === String(item.id));
+        const img = fruit && fruit.img
+          ? `<img src="${escapeHtml(fruit.img)}" alt="${escapeHtml(item.name)}" class="w-16 h-16 rounded-2xl object-cover bg-white">`
+          : `<div class="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-2xl">🍎</div>`;
+
+        return `
+          <div class="bg-slate-50 rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-100">
+            <div class="flex items-center gap-4 min-w-0">
+              ${img}
+              <div class="min-w-0">
+                <p class="font-black text-lg truncate">${escapeHtml(item.name)}</p>
+                <p class="text-sm text-slate-500 mt-1">${escapeHtml(item.unit || "1 unit")}</p>
+                <p class="text-sm text-slate-500 mt-1">${formatPrice(item.price)} each</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-black">× ${Number(item.qty) || 0}</p>
+              <p class="text-sm text-green-600 font-bold mt-1">${formatPrice(item.total)}</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function getBillSummaryHtml(order) {
+      return `
+        <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><b>${formatPrice(order.subtotal)}</b></div>
+        <div class="flex justify-between"><span class="text-slate-500">Delivery</span><b>${Number(order.delivery) ? formatPrice(order.delivery) : "FREE"}</b></div>
+        <div class="flex justify-between text-lg border-t border-slate-200 pt-3"><span class="font-black">Total</span><b class="text-green-600">${formatPrice(order.total)}</b></div>
+      `;
+    }
+
+    /* =====================================================
+       ORDER SCREEN PAR DIKHANA
+       - Pehli baar: poora order bharo
+       - Har second: sirf progress/status/eta update (dhire dhire green)
+       ===================================================== */
+    function showOrder(order) {
+      const sameOrder = shownOrderId === String(order.id);
+      shownOrderId = String(order.id);
+
+      $("empty-state").classList.add("hidden");
+      $("tracking-content").classList.remove("hidden");
+      $("status-badge").classList.remove("hidden");
+
+      const p = paintProgress(order);
+      const pay = QROrders.getPaymentInfo(order);
+
+      /* status badge + eta */
+      $("status-badge").className = getBadgeClass(p.status);
+      $("status-badge").innerText = p.status;
+      $("eta-time").innerText = p.etaText;
+      $("eta-time").className = "text-4xl font-black " + (p.cancelled ? "text-red-600" : "text-green-600");
+
+      /* cancel banner */
+      const banner = $("cancel-banner");
+      if (p.cancelled) {
+        banner.classList.remove("hidden");
+        $("cancel-banner-text").innerText =
+          `Cancelled on ${order.cancelledAt || "-"}. Reason: ${order.cancelReason || "Not given"}.` +
+          (order.paymentMethod === "UPI" ? " Payment hua tha to refund ke liye shop se WhatsApp par baat karein." : "");
+      } else {
+        banner.classList.add("hidden");
+      }
+
+      /* buttons */
+      const canCancel = QROrders.canCancel(order);
+      $("cancel-btn").classList.toggle("hidden", !canCancel);
+      $("cancel-help").classList.toggle("hidden", p.cancelled);
+      $("bill-btn").disabled = p.cancelled;
+      $("bill-btn").classList.toggle("opacity-40", p.cancelled);
+      $("bill-btn").classList.toggle("cursor-not-allowed", p.cancelled);
+
+      /* Baaki cheezein baar baar dobara na banao */
+      if (sameOrder) return;
+
+      $("tracking-title").innerText = `Order ${order.id || ""}`;
+      $("order-id-box").innerText = order.id || "-";
+      $("order-date").innerText = order.date || "-";
+      $("payment-method").innerText = pay.label;
+      $("payment-status").innerText = pay.customer;
+      $("order-total").innerText = formatPrice(order.total || 0);
+      $("customer-name").innerText = order.name || "-";
+      $("customer-phone").innerText = order.phone || "-";
+      $("customer-address").innerText = order.address || "-";
+      $("order-items").innerHTML = getOrderItemsHtml(order);
+      $("bill-summary").innerHTML = getBillSummaryHtml(order);
+
+      const input = $("order-id-input");
+      if (input) input.value = order.id || "";
+    }
+
+    /* =====================================================
+       ORDER DHOONDHNA
+       ===================================================== */
+    function findOrder() {
+      const value = ($("order-id-input").value || "").trim().toUpperCase();
+
+      if (!value) {
+        alert("Please enter Order ID");
+        return;
+      }
+
+      const found = QROrders.getAll().find((o) => String(o.id || "").toUpperCase() === value);
+
+      if (!found) {
+        showEmpty("Entered Order ID ke matching koi order nahi mila. Please ID check karke dobara try karo.");
+        return;
+      }
+
+      localStorage.setItem(STORAGE.TRACK_ORDER_ID, found.id);
+      localStorage.setItem(STORAGE.CURRENT_ORDER_ID, found.id);
+      localStorage.setItem(STORAGE.CURRENT_ORDER, JSON.stringify(found));
+
+      shownOrderId = "";   // naya order hai, poora dobara bharo
+      showOrder(found);
+    }
+
+    /* Page khulte hi: pichla tracked order dikhao */
+    function loadTracking() {
+      const targetId =
+        localStorage.getItem(STORAGE.TRACK_ORDER_ID) ||
+        localStorage.getItem(STORAGE.CURRENT_ORDER_ID) || "";
+
+      if (!targetId) {
+        showEmpty();
+        return;
+      }
+
+      const found = QROrders.getById(targetId);
+      if (!found) {
+        resetTrackingSession();
+        return;
+      }
+
+      showOrder(found);
+    }
+
+    /* Har second progress taza karo (naya order cancel/progress turant dikhe) */
+    function tick() {
+      if (!shownOrderId) return;
+      const order = QROrders.getById(shownOrderId);
+      if (order) showOrder(order);
+    }
+
+    /* =====================================================
+       BILL DOWNLOAD (ab seedha is page par PDF banta hai)
+       ===================================================== */
+    function downloadCurrentBill() {
+      if (!shownOrderId) {
+        alert("No order selected");
+        return;
+      }
+      QROrders.downloadBill(QROrders.getById(shownOrderId));
+    }
+
+    /* =====================================================
+       ORDER CANCEL
+       ===================================================== */
+    function openCancelModal() {
+      const order = QROrders.getById(shownOrderId);
+      if (!order || !QROrders.canCancel(order)) {
+        alert("Ab ye order cancel nahi ho sakta.");
+        return;
+      }
+
+      $("cancel-modal-id").innerText = order.id;
+      $("cancel-refund-note").classList.toggle("hidden", order.paymentMethod !== "UPI");
+      $("cancel-modal").classList.remove("hidden");
+    }
+
+    function closeCancelModal() {
+      $("cancel-modal").classList.add("hidden");
+    }
+
+    function confirmCancel() {
+      const reason = $("cancel-reason").value;
+      const cancelled = QROrders.cancelOrder(shownOrderId, reason);
+
+      closeCancelModal();
+
+      if (!cancelled) {
+        alert("Ab ye order cancel nahi ho sakta.");
+        tick();
+        return;
+      }
+
+      /* Shop owner ko WhatsApp par cancel ka message */
+      QROrders.openWhatsApp(QROrders.buildCancelMessage(cancelled));
+
+      showOrder(cancelled);
+    }
+
+    /* Peeche ke andhere hisse par click ya Esc dabane se popup band */
+    $("cancel-modal").addEventListener("click", function (e) {
+      if (e.target === this) closeCancelModal();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeCancelModal();
+    });
+
+    /* Enter dabane se bhi search ho */
+    $("order-id-input").addEventListener("keydown", function (event) {
+      if (event.key === "Enter") findOrder();
+    });
+
+    /* =====================================================
+       PAGE START
+       ===================================================== */
+    loadTracking();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
